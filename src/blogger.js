@@ -1,14 +1,17 @@
 import { EntryDatas } from "./entry_datas.js"
 
 export class Blogger{
+  #resolve
+  #reject
+
   constructor(options){
     this.promise = new Promise((resolve, reject)=>{
       this.time = (+new Date())
       this.options = options || {}
       this.set_callback()
-      this.resolve = resolve
-      this.reject  = reject
-      this.load()
+      this.#resolve = resolve
+      this.#reject  = reject
+      this.#load()
     })
   }
 
@@ -43,7 +46,7 @@ export class Blogger{
   get feed(){
     // blog_idを指定すると、取得件数が多くできる
     const feed = this.options.blog_id ? `https://www.blogger.com/feeds/${this.options.blog_id}` : `https://${this.domain}/feeds`
-console.log(feed)
+
     switch(this.type){
       case "pages":
         return `${feed}/pages/${this.response}`
@@ -184,7 +187,7 @@ console.log(feed)
     window[this.callback_name] = this.blogger_callback.bind(this)
   }
 
-  load(){
+  #load(){
     if(!this.domain && !this.feed){
       this.finish(null)
       return
@@ -201,11 +204,12 @@ console.log(feed)
       return
     }
     const entry_datas = new EntryDatas(res)
-    console.log(entry_datas)
-    this.finish(entry_datas.datas)
+    entry_datas.feed = this.feed
+    entry_datas.url  = this.url
+    this.finish(entry_datas, res)
   }
 
-  finish(res){
-    this.resolve(res)
+  finish(datas=[], res=null){
+    this.#resolve(datas, res)
   }
 }
